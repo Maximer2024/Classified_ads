@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Подтверждение Email{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="confirm-container">
+        <h2 class="text-center">Введите код</h2>
+        <p class="text-center">
+            Мы отправили вам 6-значный код на вашу почту. Введите его ниже.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Подтвердить</button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .confirm-container {
+        max-width: 400px;
+        margin: 50px auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+</style>
+{% endblock %}

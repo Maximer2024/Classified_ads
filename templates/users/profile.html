@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Личный кабинет</h1>
+
+    {% if user.avatar %}
+        <img src="{{ user.avatar.url }}" alt="Аватар" width="100" height="100" style="border-radius: 50%;">
+    {% endif %}
+
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Имя пользователя:</strong> {% if user.nickname %}{{ user.nickname }}{% else %}{{ user.email }}{% endif %}</p>
+
+    <a href="{% url 'edit_profile' %}" class="btn btn-secondary">Редактировать профиль</a>
+    <a href="{% url 'manage_subscriptions' %}" class="btn btn-primary">Управление подписками</a>
+
+    <hr>
+
+    <h2>Ваши объявления</h2>
+    <a href="{% url 'ad_create' %}" class="btn btn-success">Создать объявление</a>
+
+    <ul style="list-style: none; padding: 0;">
+        {% for ad in latest_ads %}
+            <li style="border: 1px solid #ddd; padding: 10px; margin-bottom: 10px;">
+                <h3>
+                    <a href="{% url 'ad_detail' ad.id %}">{{ ad.title }}</a>
+                </h3>
+                <p>{{ ad.description|truncatewords:20 }}</p>
+                <p><strong>Категория:</strong> {{ ad.category }}</p>
+                <p><strong>Дата создания:</strong> {{ ad.created_at|date:"d.m.Y H:i" }}</p>
+
+                {% if ad.image1 %}
+                    <img src="{{ ad.image1.url }}" alt="{{ ad.title }}" width="150">
+                {% endif %}
+
+                <div style="margin-top: 10px;">
+                    <a href="{% url 'ad_update' ad.id %}" class="btn btn-warning">Редактировать</a>
+                    <form action="{% url 'ad_delete' ad.id %}" method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Удалить</button>
+                    </form>
+                </div>
+            </li>
+        {% empty %}
+            <p>У вас пока нет объявлений.</p>
+        {% endfor %}
+    </ul>
+
+    {% if total_ads > 3 %}
+        <a href="{% url 'user_ads' %}" class="btn btn-info">Еще {{ total_ads|add:"-3" }}...</a>
+    {% endif %}
+
+    <hr>
+
+    <h2>Ваши отклики</h2>
+    <p>Вы можете управлять откликами на ваши объявления.</p>
+    <a href="{% url 'user_responses' %}" class="btn btn-info">Просмотреть отклики</a>
+
+{% endblock %}

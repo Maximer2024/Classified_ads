@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+    <h1>Добро пожаловать!</h1>
+    <p>Здесь можно размещать объявления, подписываться на категории и оставлять отклики.</p>
+    <a href="{% url 'ad_list' %}" class="btn btn-primary">Перейти к объявлениям</a>
+{% endblock %}

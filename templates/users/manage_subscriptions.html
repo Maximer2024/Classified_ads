@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Мои подписки</h1>
+
+    <h2>Подписки на авторов</h2>
+    {% if author_subs %}
+        <ul class="list-group mb-4">
+            {% for sub in author_subs %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {% if sub.author.avatar %}
+                        <img src="{{ sub.author.avatar.url }}" alt="Аватар" style="width:40px; height:40px; border-radius:50%; margin-right:10px;">
+                    {% endif %}
+                    <span>
+                        {% if sub.author.nickname %}
+                            {{ sub.author.nickname }}
+                        {% else %}
+                            {{ sub.author.email }}
+                        {% endif %}
+                    </span>
+                    <form method="post" action="{% url 'unsubscribe_author' sub.id %}" style="margin:0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">Отписаться</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Нет подписок на авторов.</p>
+    {% endif %}
+
+    <h2>Подписки на категории</h2>
+    <ul class="list-group">
+        {% for cat in all_categories %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>Категория: {{ cat.0 }}</span>
+                {% if cat.0 in subscribed_categories %}
+                    {# Для отписки нам нужен ID подписки. Найдём его: #}
+                    {% for sub in category_subs %}
+                        {% if sub.category == cat.0 %}
+                            {% with sub_id=sub.id %}
+                                <form method="post" action="{% url 'unsubscribe_category' sub_id %}" style="margin:0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm">Отписаться</button>
+                                </form>
+                            {% endwith %}
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <form method="post" action="{% url 'subscribe_category' %}" style="margin:0;">
+                        {% csrf_token %}
+                        <input type="hidden" name="category" value="{{ cat.0 }}">
+                        <button type="submit" class="btn btn-primary btn-sm">Подписаться</button>
+                    </form>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <hr>
+    <a href="{% url 'user_profile' %}" class="btn btn-secondary">Назад в профиль</a>
+</div>
+{% endblock %}

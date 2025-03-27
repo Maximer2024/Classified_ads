@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Подтверждение Email</h2>
+    <p class="text-center">Введите код, который мы отправили вам на почту.</p>
+
+    <form method="post" class="mt-3 mx-auto" style="max-width: 400px;">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" name="email" id="email" class="form-control"
+                   value="{{ email }}" readonly required>
+        </div>
+
+        <button type="button" id="change-email-btn" class="btn btn-link p-0">Ошиблись при написании почты?</button>
+
+        <div class="mb-3">
+            <label for="code" class="form-label">Код подтверждения</label>
+            <input type="text" name="code" id="code" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Подтвердить</button>
+
+        <button type="button" id="resend-code-btn" class="btn btn-secondary w-100 mt-2">
+            Отправить код
+        </button>
+    </form>
+
+    <div id="resend-message" class="mt-3"></div>
+
+    {% if messages %}
+        <div class="mt-3">
+            {% for message in messages %}
+                <div class="alert alert-info">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.getElementById("change-email-btn").addEventListener("click", function() {
+    let emailField = document.getElementById("email");
+    emailField.removeAttribute("readonly");
+    emailField.focus();
+});
+
+document.getElementById("resend-code-btn").addEventListener("click", function() {
+    let email = document.getElementById("email").value;
+    let csrfToken = document.querySelector("input[name=csrfmiddlewaretoken]").value;
+    let messageDiv = document.getElementById("resend-message");
+
+    fetch("{% url 'resend_verification_code' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": csrfToken
+        },
+        body: "email=" + encodeURIComponent(email)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+        } else {
+            messageDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+        }
+    })
+    .catch(error => {
+        console.error("Ошибка:", error);
+        messageDiv.innerHTML = `<div class="alert alert-danger">Ошибка при отправке кода</div>`;
+    });
+});
+</script>
+
+{% endblock %}

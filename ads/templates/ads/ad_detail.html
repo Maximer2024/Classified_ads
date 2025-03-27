@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% load youtube_filters %}
+
+{% block content %}
+    <div class="author-info">
+        {% if ad.author.avatar %}
+            <img src="{{ ad.author.avatar.url }}" class="avatar-img">
+        {% endif %}
+        <strong>
+            {% if ad.author.nickname %}
+                {{ ad.author.nickname }}
+            {% else %}
+                {{ ad.author.email }}
+            {% endif %}
+        </strong>
+
+        {% if request.user.is_authenticated and request.user != ad.author %}
+            {% if ad.author.id in subscribed_authors %}
+                <form method="post" action="{% url 'subscribe_author' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="author" value="{{ ad.author.id }}">
+                    <button type="submit" class="btn btn-secondary btn-sm">Отписаться</button>
+                </form>
+            {% else %}
+                <form method="post" action="{% url 'subscribe_author' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="author" value="{{ ad.author.id }}">
+                    <button type="submit" class="btn btn-primary btn-sm">Подписаться на автора</button>
+                </form>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <h1>{{ ad.title }}</h1>
+    <p><strong>Категория:</strong> {{ ad.category }}</p>
+    <p>{{ ad.description }}</p>
+    <p><strong>Дата создания:</strong> {{ ad.created_at|date:"d.m.Y H:i" }}</p>
+
+    {% if images %}
+        <div class="d-flex">
+            {% for image in images %}
+                <img src="{{ image.url }}" class="img-thumbnail me-2 preview-img"
+                     style="width: 100px; cursor: pointer;" onclick="openImage('{{ image.url }}')">
+            {% endfor %}
+        </div>
+
+        <div id="image-modal" class="modal" onclick="closeImage()">
+            <span class="close">&times;</span>
+            <img class="modal-content" id="full-image">
+        </div>
+    {% endif %}
+
+    {% if ad.video_url %}
+        <div class="ratio ratio-16x9">
+            <iframe width="560" height="315" src="{{ ad.video_url|embed_youtube }}"
+                    frameborder="0" allowfullscreen></iframe>
+        </div>
+    {% endif %}
+
+    <hr>
+
+    {% if ad.author == request.user %}
+        <a href="{% url 'ad_update' ad.id %}" class="btn btn-warning">Редактировать</a>
+        <a href="{% url 'ad_delete' ad.id %}" class="btn btn-danger">Удалить</a>
+    {% endif %}
+
+    <hr>
+
+    <h2>Отклики</h2>
+    {% for response in ad.responses.all %}
+        <div class="response-box">
+            <!-- Информация о пользователе, оставившем отклик -->
+            <div class="author-info">
+                {% if response.user.avatar %}
+                    <img src="{{ response.user.avatar.url }}" class="avatar-img">
+                {% endif %}
+                <strong>
+                    {% if response.user.nickname %}
+                        {{ response.user.nickname }}
+                    {% else %}
+                        {{ response.user.email }}
+                    {% endif %}
+                </strong>
+
+                {% if request.user.is_authenticated and request.user != response.user %}
+                    <form method="post" action="{% url 'subscribe_author' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="author" value="{{ response.user.id }}">
+                        <button type="submit" class="btn btn-secondary btn-sm">Подписаться</button>
+                    </form>
+                {% endif %}
+            </div>
+
+            <p>{{ response.text }}</p>
+            <p>
+                <strong>Статус:</strong>
+                <span style="font-weight: bold;
+                             {% if response.status == 'accepted' %} color: green;
+                             {% elif response.status == 'rejected' %} color: red;
+                             {% else %} color: orange; {% endif %}">
+                    {% if response.status == 'accepted' %}
+                        (Принят)
+                    {% elif response.status == 'rejected' %}
+                        (Отклонён)
+                    {% else %}
+                        (На рассмотрении)
+                    {% endif %}
+                </span>
+            </p>
+
+            {% if ad.author == request.user and response.status == 'pending' %}
+                <form method="post" action="{% url 'change_response_status' response.id 'accepted' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-sm">Принять</button>
+                </form>
+
+                <form method="post" action="{% url 'change_response_status' response.id 'rejected' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning btn-sm">Отклонить</button>
+                </form>
+
+                <form method="post" action="{% url 'delete_response' response.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                </form>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p>Пока нет откликов.</p>
+    {% endfor %}
+
+    <hr>
+
+    {% if user.is_authenticated and user != ad.author %}
+        <h3>Оставить отклик</h3>
+        <form method="post" action="{% url 'add_response' ad.id %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Отправить</button>
+        </form>
+    {% endif %}
+
+    <style>
+        .author-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .author-info img.avatar-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .response-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            text-align: center;
+        }
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            margin-top: 5%;
+        }
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+
+    <script>
+        function openImage(src) {
+            document.getElementById("full-image").src = src;
+            document.getElementById("image-modal").style.display = "block";
+        }
+
+        function closeImage() {
+            document.getElementById("image-modal").style.display = "none";
+        }
+    </script>
+
+{% endblock %}

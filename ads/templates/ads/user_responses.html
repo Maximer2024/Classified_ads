@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Управление откликами</h1>
+
+    <h2>Отклики на мои объявления</h2>
+    {% if received_responses %}
+        {% for response in received_responses %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        Отклик на:
+                        <a href="{% url 'ad_detail' response.ad.id %}" class="text-decoration-none">
+                            {{ response.ad.title }}
+                        </a>
+                    </h5>
+                    <h6 class="card-subtitle text-muted">
+                        От: {{ response.user.email }} | {{ response.created_at|date:"d.m.Y H:i" }}
+                    </h6>
+                    <p class="card-text">{{ response.text }}</p>
+                    <p>
+                        <strong>Статус:</strong>
+                        {% if response.status == 'pending' %}
+                            <span class="badge bg-secondary">На рассмотрении</span>
+                        {% elif response.status == 'accepted' %}
+                            <span class="badge bg-success">Принят</span>
+                        {% else %}
+                            <span class="badge bg-danger">Отклонён</span>
+                        {% endif %}
+                    </p>
+
+                    {% if response.status == 'pending' %}
+                        <a href="{% url 'change_response_status' response.id 'accepted' %}" class="btn btn-success btn-sm">Принять</a>
+                        <a href="{% url 'change_response_status' response.id 'rejected' %}" class="btn btn-warning btn-sm">Отклонить</a>
+                    {% else %}
+                        <span class="text-muted">Этот отклик уже обработан</span>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">Нет откликов на ваши объявления.</p>
+    {% endif %}
+
+    <hr>
+
+    <!-- Отклики, которые я оставил -->
+    <h2>Отклики, которые я оставил</h2>
+    {% if my_responses %}
+        {% for response in my_responses %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        Отклик на:
+                        <a href="{% url 'ad_detail' response.ad.id %}" class="text-decoration-none">
+                            {{ response.ad.title }}
+                        </a>
+                    </h5>
+                    <h6 class="card-subtitle text-muted">
+                        Ваш отклик от {{ response.created_at|date:"d.m.Y H:i" }}
+                    </h6>
+                    <p class="card-text">{{ response.text }}</p>
+                    <p>
+                        <strong>Статус:</strong>
+                        {% if response.status == 'pending' %}
+                            <span class="badge bg-secondary">На рассмотрении</span>
+                        {% elif response.status == 'accepted' %}
+                            <span class="badge bg-success">Принят</span>
+                        {% else %}
+                            <span class="badge bg-danger">Отклонён</span>
+                        {% endif %}
+                    </p>
+
+                    <form method="post" action="{% url 'delete_response' response.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">Вы ещё не оставляли откликов.</p>
+    {% endif %}
+
+{% endblock %}

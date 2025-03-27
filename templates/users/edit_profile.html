@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>Редактировать профиль</h2>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="id_avatar" class="form-label">Аватар:</label><br>
+                {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}" alt="Аватар" class="img-thumbnail mb-2" style="width: 150px; height: 150px;">
+                {% endif %}
+                <input type="file" name="avatar" id="id_avatar" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label for="id_nickname" class="form-label">Никнейм:</label>
+                <input type="text" name="nickname" id="id_nickname" class="form-control" value="{{ user.nickname|default_if_none:'' }}">
+            </div>
+
+            <div class="mb-3">
+                <label for="id_email" class="form-label">Email:</label>
+                <input type="email" name="email" id="id_email" class="form-control" value="{{ user.email }}" required readonly>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        </form>
+
+        <hr>
+
+        <a href="{% url 'user_profile' %}" class="btn btn-secondary">Назад в профиль</a>
+    </div>
+{% endblock %}
