@@ -37,7 +37,7 @@
 ### ⚙️ Установка
 
 ```bash
-git clone https://github.com/your-username/Classified_ads.git
+git clone https://github.com/Maximer2024/Classified_ads.git
 cd Classified_ads
 python -m venv venv
 source venv/bin/activate
